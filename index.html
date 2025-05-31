@@ -41,6 +41,15 @@ document.body.appendChild(halo);
     import * as THREE from 'https://unpkg.com/three@0.125.2/build/three.module.js';
     import { GLTFLoader } from 'https://unpkg.com/three@0.125.2/examples/jsm/loaders/GLTFLoader.js';
 
+    // --- Suivi du curseur pour la crevette ---
+    let mouseX = 0;
+    let mouseY = 0;
+
+    document.addEventListener('mousemove', (event) => {
+      mouseX = (event.clientX / window.innerWidth) * 2 - 1;
+      mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+    });
+
     const scene = new THREE.Scene();
 
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
@@ -151,7 +160,15 @@ document.body.appendChild(halo);
       requestAnimationFrame(animate);
 
       if (shrimp) {
+        // Rotation continue autour de Y
         shrimp.rotation.y += 0.005;
+
+        // Ajout du suivi souris par interpolation douce
+        const targetX = mouseY * 2;
+        const targetZ = mouseX * 2;
+
+        shrimp.rotation.x += (targetX - shrimp.rotation.x) * 0.05;
+        shrimp.rotation.z += (targetZ - shrimp.rotation.z) * 0.05;
       }
 
       renderer.render(scene, camera);
