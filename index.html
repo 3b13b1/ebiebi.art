@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <label class="switch" style="position: absolute; top: 20px; right: 20px; z-index: 10;">
+    <input type="checkbox" id="toggleDarkMode">
+    <span class="slider round"></span>
+  </label>
+  <div class="hero">
+    <h1></h1>
+  </div>
+  
+  <div class="grid">
+    <div class="box top-left">
+      <div class="category-text">sns</div>
+    </div>
+    <div class="box top-right">
+      <div class="category-text">contact</div>
+    </div>
+    <div class="box bottom-left">
+      <div class="category-text">about</div>
+    </div>
+    <div class="box bottom-right">
+      <div class="category-text">(soon)</div>
+    </div>
+  </div>
+  <div class="overlay" id="popupOverlay"></div>
+  <div class="popup" id="aboutPopup">
+  <div class="category-text">ABOUT</div>
+  </div>
+  <script type="module">
+
+// Ajouter le halo pour un effet de lumière douce
+const halo = document.createElement('div');
+halo.classList.add('halo');
+document.body.appendChild(halo);
+    import * as THREE from 'https://unpkg.com/three@0.125.2/build/three.module.js';
+    import { GLTFLoader } from 'https://unpkg.com/three@0.125.2/examples/jsm/loaders/GLTFLoader.js';
+
+    const scene = new THREE.Scene();
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambientLight);
+
+    const directionalLight = new THREE.DirectionalLight(0xffddcc, 0.8);
+    directionalLight.position.set(3, 4, 5);
+    scene.add(directionalLight);
+
+    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.z = 50;
+
+    const renderer = new THREE.WebGLRenderer({ alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setClearColor(0x000000, 1);
+    renderer.domElement.style.position = 'fixed';
+    renderer.domElement.style.top = 0;
+    renderer.domElement.style.left = 0;
+    renderer.domElement.style.zIndex = -1;
+    renderer.domElement.classList.add('shrimp-canvas');
+    document.body.appendChild(renderer.domElement);
+
+    // --- Ajout lumière directionnelle pour reflets en dark mode ---
+    let rimLight;
+
+    function updateLightingMode() {
+      if (document.body.classList.contains('dark-mode')) {
+        if (!rimLight) {
+          rimLight = new THREE.DirectionalLight(0xffffff, 1.4);
+          rimLight.position.set(20, 20, 30);
+          scene.add(rimLight);
+        }
+      } else {
+        if (rimLight) {
+          scene.remove(rimLight);
+          rimLight = null;
+        }
+      }
+    }
+
+    // Chargement du modèle EBI4_2.glb à la place du cube test
+    let shrimp;
+
+    const loader = new GLTFLoader();
+    loader.load(
+      './assets/EBI4_2.glb',
+      function (gltf) {
+        console.log('✅ Modèle chargé :', gltf);
+        shrimp = gltf.scene;
+        shrimp.scale.set(0.85, 0.85, 0.85);
+
+        // Centrage du modèle
+        const box = new THREE.Box3().setFromObject(shrimp);
+        const center = new THREE.Vector3();
+        box.getCenter(center);
+        shrimp.position.sub(center);
+        shrimp.position.y -= 1.2; // pour abaisser légèrement la crevette dans le cadre
+
+        if (document.body.classList.contains('dark-mode')) {
+          directionalLight.intensity = 0.05;
+          if (rimLight) rimLight.intensity = 0.05;
+
+          shrimp.traverse((child) => {
+            if (child.isMesh) {
+              child.material = new THREE.MeshPhysicalMaterial({
+                color: 0x111111,              // teinte légèrement plus saturée
+                emissive: 0x222222,           // un peu plus lumineux
+                roughness: 0.9,
+                metalness: 0.05,
+                clearcoat: 0.1,
+                clearcoatRoughness: 0.9,
+                reflectivity: 0.1,
+                transmission: 0,
+                ior: 1.2,
+              });
+            }
+          });
+        } else {
+          directionalLight.intensity = 0.8;
+          if (rimLight) rimLight.intensity = 1.4;
+
+          shrimp.traverse((child) => {
+            if (child.isMesh) {
+              const originalColor = child.material?.color?.getHex?.();
+              child.material = new THREE.MeshStandardMaterial({
+                color: originalColor,
+                metalness: 0.2,
+                roughness: 0.1,
+                clearcoat: 1,
+                clearcoatRoughness: 0,
+                envMapIntensity: 1,
+                transmission: 0.2,
+                ior: 1.45,
+              });
+            }
+          });
+        }
+
+        scene.add(shrimp);
+      },
+      undefined,
+      function (error) {
+        console.error('❌ Erreur de chargement du modèle :', error);
+      }
+    );
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      if (shrimp) {
+        shrimp.rotation.y += 0.005;
+      }
+
+      renderer.render(scene, camera);
+    }
+
+    animate();
+    
+  // Modifier la couleur du fond en fonction du mode
+  function updateBackgroundColor() {
+    if (document.body.classList.contains('dark-mode')) {
+      renderer.setClearColor(0x000000, 0); // fond transparent en dark mode
+    } else {
+      renderer.setClearColor(0xffffff, 1);
+    }
+    updateLightingMode();
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    const button = document.getElementById('toggleDarkMode');
+    if (button) {
+      button.addEventListener('click', () => {
+        document.body.classList.toggle('dark-mode');
+        updateBackgroundColor();
+
+        const shrimpCanvas = document.querySelector('canvas.shrimp-canvas');
+        if (document.body.classList.contains('dark-mode')) {
+          shrimpCanvas.style.opacity = '1';
+          shrimpCanvas.style.clipPath = 'none';
+        } else {
+          shrimpCanvas.style.opacity = '1';
+          shrimpCanvas.style.clipPath = 'none';
+        }
+      });
+    } else {
+      console.warn("❌ Bouton #toggleDarkMode introuvable");
+    }
+
+    updateBackgroundColor();
+  });
+
+  const boxes = document.querySelectorAll('.box');
+  const body = document.body;
+
+  // Ajoute des lignes aléatoires façon captcha centrées sur la zone de texte
+  function addCaptchaLines(box) {
+    const text = box.querySelector('.category-text');
+    const rect = text.getBoundingClientRect();
+    const boxRect = box.getBoundingClientRect();
+
+    const canvas = document.createElement('canvas');
+    canvas.width = rect.width;
+    canvas.height = rect.height;
+    canvas.classList.add('captcha-lines');
+    canvas.style.filter = 'none';
+    const ctx = canvas.getContext('2d');
+
+    for (let i = 0; i < 6; i++) {
+      ctx.beginPath();
+      ctx.moveTo(Math.random() * canvas.width, Math.random() * canvas.height);
+      ctx.lineTo(Math.random() * canvas.width, Math.random() * canvas.height);
+      ctx.strokeStyle = 'rgba(0,0,0,1)';
+      ctx.lineWidth = 1 + Math.random();
+      ctx.stroke();
+    }
+
+    canvas.style.position = 'absolute';
+    canvas.style.top = `${rect.top - boxRect.top}px`;
+    canvas.style.left = `${rect.left - boxRect.left}px`;
+    canvas.style.pointerEvents = 'none';
+    canvas.style.zIndex = '3';
+
+    box.style.position = 'relative';
+
+    box.appendChild(canvas);
+  }
+
+  function removeCaptchaLines(box) {
+    const lines = box.querySelectorAll('.captcha-lines');
+    lines.forEach(el => el.remove());
+  }
+
+  boxes.forEach(box => {
+    box.addEventListener('mouseenter', () => {
+      const shrimpCanvas = document.querySelector('canvas.shrimp-canvas');
+      if (body.classList.contains('dark-mode') && shrimpCanvas) {
+        const rect = box.getBoundingClientRect();
+        const offsetX = -10;
+        const topLeft = `${rect.left + offsetX}px ${rect.top}px`;
+        const topRight = `${rect.right - offsetX}px ${rect.top}px`;
+        const bottomRight = `${rect.right - offsetX}px ${rect.bottom}px`;
+        const bottomLeft = `${rect.left + offsetX}px ${rect.bottom}px`;
+        shrimpCanvas.style.clipPath = `polygon(${topLeft}, ${topRight}, ${bottomRight}, ${bottomLeft})`;
+        shrimpCanvas.style.opacity = '1';
+      }
+      addCaptchaLines(box);
+    });
+
+    box.addEventListener('mouseleave', () => {
+      const shrimpCanvas = document.querySelector('canvas.shrimp-canvas');
+      if (body.classList.contains('dark-mode') && shrimpCanvas) {
+        shrimpCanvas.style.clipPath = 'inset(100%)';
+        shrimpCanvas.style.opacity = '0';
+      }
+      removeCaptchaLines(box);
+    });
+  });
+  </script>
+  <script>
+    const gridBoxes = document.querySelectorAll('.box');
+    gridBoxes.forEach(box => {
+      box.addEventListener('mouseenter', () => {
+        box.classList.add('pixel-mask');
+        box.classList.add('magnifier');
+      });
+      box.addEventListener('mouseleave', () => {
+        box.classList.remove('pixel-mask');
+        box.classList.remove('magnifier');
+      });
+    });
+
+    document.querySelectorAll('.box').forEach(box => {
+      box.addEventListener('click', function(e) {
+        const ripple = document.createElement('span');
+        ripple.classList.add('ripple');
+        const rect = box.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        ripple.style.width = ripple.style.height = `${size}px`;
+        ripple.style.left = `${e.clientX - rect.left - size / 2}px`;
+        ripple.style.top = `${e.clientY - rect.top - size / 2}px`;
+        box.appendChild(ripple);
+        setTimeout(() => ripple.remove(), 600);
+
+        if (box.classList.contains('bottom-left')) {
+          const popup = document.getElementById('aboutPopup');
+          popup.classList.add('pixel-mask');
+          popup.classList.add('magnifier');
+          popup.style.display = 'flex';
+          popup.classList.add('show');
+          document.body.classList.add('popup-active');
+          document.getElementById('popupOverlay').classList.add('show');
+        }
+      });
+    });
+
+    document.querySelectorAll('.box').forEach(box => {
+      box.addEventListener('click', () => {
+        box.classList.add('click-effect');
+        box.addEventListener('animationend', () => {
+          box.classList.remove('click-effect');
+        }, { once: true });
+      });
+    });
+
+    const aboutPopup = document.getElementById('aboutPopup');
+    const overlay = document.getElementById('popupOverlay');
+    aboutPopup.addEventListener('click', () => {
+      aboutPopup.classList.add('hide');
+      document.body.classList.remove('popup-active');
+      overlay.classList.remove('show');
+      aboutPopup.addEventListener('animationend', () => {
+        aboutPopup.classList.remove('show', 'hide');
+        aboutPopup.style.display = 'none';
+      }, { once: true });
+    });
+
+    overlay.addEventListener('click', () => {
+      aboutPopup.classList.add('hide');
+      overlay.classList.remove('show');
+      document.body.classList.remove('popup-active');
+      aboutPopup.addEventListener('animationend', () => {
+        aboutPopup.classList.remove('show', 'hide');
+        aboutPopup.style.display = 'none';
+      }, { once: true });
+    });
+  </script>
+</body>
+</html>
