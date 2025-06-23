@@ -3,8 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>EBI Interface</title>
+  <title>EBI</title>
   <style>
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
     .theme-toggle {
       position: fixed;
       top: 20px;
@@ -192,7 +197,7 @@
   <div class="halo"></div>
   <div class="word" id="manifesto">manifesto</div>
   <div class="word" id="sns">sns</div>
-  <div class="word" id="contact">contact</div>
+  <div class="word" id="contact"><a href="mailto:ebi@ebiebi.art">contact</a></div>
   <div class="pill">EBI™ 2025</div>
   <div class="overlay" id="popupOverlay">
     <div class="popup">
@@ -221,8 +226,8 @@
       const float = () => {
         gsap.to(word, {
           duration: 5 + Math.random() * 5,
-          x: "+=" + (Math.random() - 0.5) * 100,
-          y: "+=" + (Math.random() - 0.5) * 100,
+          x: "+=" + (Math.random() - 0.5) * 200,
+          y: "+=" + (Math.random() - 0.5) * 200,
           ease: "sine.inOut",
           onComplete: float
         });
