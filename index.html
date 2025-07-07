@@ -5,9 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>EBI</title>
   <style>
-    @font-face {
+    a {
+      color: inherit;
+      text-decoration: none;
+      cursor: none;
+    }
+   @font-face {
       font-family: "Blur";
       src: url("fonts/Redaction100-Bold.otf") format("opentype");
+    }
+    @font-face {
+      font-family: "BlurTM";
+      src: url("fonts/Redaction50-Regular.otf") format("opentype");
     }
 
     @font-face {
@@ -17,12 +26,6 @@
     @font-face {
       font-family: "VG";
       src: url("fonts/VG5000-Regular.otf") format("opentype");
-    }
-
-    a {
-      color: inherit;
-      text-decoration: none;
-      cursor: none;
     }
 
     .theme-toggle {
@@ -79,7 +82,7 @@
       background-color: rgba(0, 0, 0, 0.1);
       box-shadow: 0 0 40px rgba(0, 0, 0, 0.2);
     }
-    
+ 
     body {
       margin: 0;
       background: black;
@@ -137,12 +140,33 @@
       border-radius: 999px;
       cursor: none;
       filter: blur(0);
-      font-family: "Sharp", sans-serif;
+      font-family: "Blur", sans-serif;
       transition: all 0.3s ease;
     }
 
     .pill:hover {
-      font-family: "Blur", sans-serif;
+      box-shadow: 0 0 20px rgba(255, 255, 255, 0.6),
+                  0 0 40px rgba(255, 255, 255, 0.4),
+                  0 0 60px rgba(255, 255, 255, 0.3),
+                  0 0 80px rgba(255, 255, 255, 0.2);
+      background-color: rgba(255, 255, 255, 0.25);
+      transition: all 0.3s ease;
+      transform: translateX(-50%) scale(1.1);
+    }
+    .pill-text {
+      display: inline-block;
+      transform: scale(0.91);
+    }
+    .pill-tm {
+      font-family: "BlurTM", sans-serif;
+    }
+
+    body.light .pill:hover {
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.3),
+                  0 0 40px rgba(0, 0, 0, 0.2),
+                  0 0 60px rgba(0, 0, 0, 0.1),
+                  0 0 80px rgba(0, 0, 0, 0.05);
+      background-color: rgba(255, 255, 255, 0.25);
     }
 
     .overlay {
@@ -204,7 +228,7 @@
   <div class="word" id="manifesto">manifesto</div>
   <div class="word" id="sns">sns</div>
   <div class="word" id="contact"><a href="mailto:ebi@ebiebi.art">contact</a></div>
-  <div class="pill">EBI™ 2025</div>
+  <div class="pill"><span class="pill-text">EBI<span class="pill-tm">™<span class="pill-text">2025</span></span></span></div>
   <div class="overlay" id="popupOverlay">
     <div class="popup">
       <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
